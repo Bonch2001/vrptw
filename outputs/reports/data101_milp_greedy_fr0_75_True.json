@@ -1,0 +1,33 @@
+{
+  "instance_name": "data101.vrp",
+  "method": "milp",
+  "generator": "greedy",
+  "use_time_windows": false,
+  "params": {
+    "fill_ratio": 0.75,
+    "seed": 42,
+    "sa_initial_temp": 1000.0,
+    "sa_cooling_rate": 0.55,
+    "sa_min_temp": 0.01,
+    "sa_iterations_per_temp": 200,
+    "sa_p_relocate": 0.5,
+    "sa_p_exchange": 0.2,
+    "tabu_tenure": 10,
+    "tabu_max_iterations": 200,
+    "tabu_max_no_improve": 50,
+    "tabu_no_2opt": false,
+    "milp_max_vehicles": null,
+    "milp_time_limit": 60.0,
+    "milp_mip_gap": 0.0
+  },
+  "initial_routes": 10,
+  "initial_distance": 1371.1751926284178,
+  "final_routes": 11,
+  "final_distance": 1065.6871345823095,
+  "delta_routes": -1,
+  "delta_distance": 305.48805804610834,
+  "distance_improvement_pct": 22.279287117243975,
+  "runtime_seconds": 240.4352495,
+  "history_length": 5,
+  "counters": {}
+}

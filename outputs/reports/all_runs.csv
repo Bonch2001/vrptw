@@ -1,3 +1,0 @@
-instance_name,method,generator,use_time_windows,initial_routes,initial_distance,final_routes,final_distance,delta_routes,delta_distance,distance_improvement_pct,runtime_seconds,history_length,param_fill_ratio,param_seed,param_sa_initial_temp,param_sa_cooling_rate,param_sa_min_temp,param_sa_iterations_per_temp,param_sa_p_relocate,param_tabu_tenure,param_tabu_max_iterations,param_tabu_max_no_improve
-data101.vrp,sa,random,True,70,4607.637731288301,21,1724.7917631540718,49,2882.8459681342297,62.56668028734504,2.7018428,1626,0.75,42,1000.0,0.55,0.01,200,0.5,10,200,50
-data101.vrp,sa,random,True,70,4607.637731288301,21,1724.7917631540718,49,2882.8459681342297,62.56668028734504,2.6906919,1626,0.75,42,1000.0,0.55,0.01,200,0.5,10,200,50

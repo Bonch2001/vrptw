@@ -1,0 +1,5 @@
+instance_name,method,generator,use_time_windows,initial_routes,initial_distance,final_routes,final_distance,delta_routes,delta_distance,distance_improvement_pct,runtime_seconds,history_length,param_fill_ratio,param_seed,param_sa_initial_temp,param_sa_cooling_rate,param_sa_min_temp,param_sa_iterations_per_temp,param_sa_p_relocate,param_sa_p_exchange,param_tabu_tenure,param_tabu_max_iterations,param_tabu_max_no_improve,param_tabu_no_2opt
+data111.vrp,sa,random,True,39,3967.5880028700194,19,1526.8866062259726,20,2440.701396644047,61.51599901195703,0.5875782,1720,0.75,3,1000.0,0.55,0.01,200,0.5,0.2,10,200,50,False
+data111.vrp,sa,random,True,41,3987.010345609094,18,1510.8892632350041,23,2476.1210823740903,62.10470672846509,0.6403182999999999,1721,0.75,1,1000.0,0.55,0.01,200,0.5,0.2,10,200,50,False
+data111.vrp,sa,random,True,41,3942.473918920051,17,1530.351088914506,24,2412.122830005545,61.182974944480804,0.6576719000000002,1734,0.75,2,1000.0,0.55,0.01,200,0.5,0.2,10,200,50,False
+data111.vrp,sa,random,True,41,3942.473918920051,17,1530.351088914506,24,2412.122830005545,61.182974944480804,0.5975565,1734,0.75,2,1000.0,0.55,0.01,200,0.5,0.2,10,200,50,False

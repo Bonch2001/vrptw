@@ -610,6 +610,32 @@ def random_neighbor(
 
     return None
 
+def _perturb_solution(inst: Instance, routes: List[List[int]], use_tw: bool = False) -> List[List[int]]:
+    """Randomly move a client to escape local optimum."""
+    import random
+    routes = [r[:] for r in routes if r]
+    
+    if not routes or not any(routes):
+        return routes
+    
+    # Pick random route and random client
+    route_idx = random.randint(0, len(routes) - 1)
+    if not routes[route_idx]:
+        return routes
+    
+    client_idx = random.randint(0, len(routes[route_idx]) - 1)
+    client = routes[route_idx][client_idx]
+    
+    # Remove from route
+    routes[route_idx] = routes[route_idx][:client_idx] + routes[route_idx][client_idx+1:]
+    
+    # Insert into random position in random route
+    target_route = random.randint(0, len(routes) - 1)
+    insert_pos = random.randint(0, len(routes[target_route]))
+    routes[target_route].insert(insert_pos, client)
+    
+    return [r for r in routes if r]
+
 def simulated_annealing(
     inst: Instance,
     initial_routes: List[List[int]],
@@ -800,7 +826,7 @@ def tabu_search(
     tabu_tenure: int = 10,
     max_iterations: int = 200,
     max_no_improve: int = 50,
-    intensify_with_2opt: bool = True,
+    tabu_no_2opt: bool = False,
     return_history: bool = False
 ):
     """
@@ -820,7 +846,7 @@ def tabu_search(
         tabu_tenure: Number of iterations during which a moved client stays tabu.
         max_iterations: Maximum number of tabu iterations.
         max_no_improve: Stop if the global best does not improve for this many iterations.
-        intensify_with_2opt: If True, run intra-route 2-opt after each accepted relocate.
+        tabu_no_2opt: If True, disable intra-route 2-opt intensification after each accepted relocate.
         return_history: If True, also return the evolution history.
 
     Returns:
@@ -867,13 +893,23 @@ def tabu_search(
         if best_candidate is None:
             break
 
-        current = [r[:] for r in best_candidate]
+        current = [r[:] for r in best_candidate if r] # remove empty routes if any
 
-        if intensify_with_2opt:
+        if not tabu_no_2opt:
             current = [
                 intra_2opt(inst, route, use_tw=use_tw)
                 for route in current
             ]
+
+        # Diversification: if stuck, perturb solution
+        if no_improve_count > max_no_improve // 2:
+            current = _perturb_solution(inst, current, use_tw=use_tw)
+            no_improve_count = 0
+
+        # Verify feasibility
+        is_feasible = all(check_route(inst, r, use_tw=use_tw)[0] for r in current)
+        if not is_feasible:
+            continue
 
         current_score = solution_score(inst, current)
         history.append(current_score)

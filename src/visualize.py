@@ -5,7 +5,15 @@
 import matplotlib.pyplot as plt
 
 
-def plot_routes(inst, routes, title="Routes", save_path=None):
+def plot_routes(
+    inst,
+    routes,
+    title="Routes",
+    save_path=None,
+    show=True,
+    show_route_labels=False,
+    legend_outside=True
+):
     fig, ax = plt.subplots(figsize=(8, 8))
 
     # Plot clients
@@ -26,17 +34,35 @@ def plot_routes(inst, routes, title="Routes", save_path=None):
         px = [inst.coords[node][0] for node in path]
         py = [inst.coords[node][1] for node in path]
 
-        ax.plot(px, py, marker="o", linewidth=1.5, markersize=3, label=f"R{idx}")
+        label = f"R{idx}" if show_route_labels else None
+        ax.plot(px, py, marker="o", linewidth=1.5, markersize=3, label=label)
 
     ax.set_title(title)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.legend(loc="best", fontsize=8)
     ax.grid(True)
+
+    # only show legend for clients/depot by default
+    if show_route_labels:
+        if legend_outside:
+            ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize=8)
+        else:
+            ax.legend(loc="best", fontsize=8)
+    else:
+        handles, labels = ax.get_legend_handles_labels()
+        # keep only Clients + Depot
+        filtered = [(h, l) for h, l in zip(handles, labels) if l in ("Clients", "Depot")]
+        if filtered:
+            handles, labels = zip(*filtered)
+            ax.legend(handles, labels, loc="best", fontsize=9)
 
     if save_path:
         plt.savefig(save_path, dpi=200, bbox_inches="tight")
-    plt.show()
+
+    if show:
+        plt.show()
+    else:
+        plt.close()
 
 
 def plot_history(history, save_path=None, show=True):

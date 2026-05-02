@@ -755,6 +755,72 @@ def simulated_annealing(
     return best
 
 
+def _iter_exchange_candidates(
+    inst: Instance,
+    routes: List[List[int]],
+    use_tw: bool = False
+):
+    """
+    Enumerate all feasible inter-route exchange neighbors.
+
+    Each yielded candidate corresponds to swapping one client from a source
+    route with one client from a target route.
+
+    Yields:
+        A tuple (client_pair, candidate_routes, candidate_score).
+            client_pair: a frozenset of two clients being swapped.
+    """
+    current_routes = [r[:] for r in routes if r]
+
+    if len(current_routes) < 2:
+        return
+
+    for source_idx in range(len(current_routes)):
+        source_route = current_routes[source_idx]
+
+        for source_pos in range(len(source_route)):
+            source_client = source_route[source_pos]
+
+            for target_idx in range(source_idx + 1, len(current_routes)):
+                target_route = current_routes[target_idx]
+
+                for target_pos in range(len(target_route)):
+                    target_client = target_route[target_pos]
+
+                    # Swap the two clients
+                    new_source = source_route[:]
+                    new_target = target_route[:]
+
+                    new_source[source_pos] = target_client
+                    new_target[target_pos] = source_client
+
+                    # Check feasibility
+                    feas_source, _, _, _ = check_route(inst, new_source, use_tw=use_tw)
+                    if not feas_source:
+                        continue
+
+                    feas_target, _, _, _ = check_route(inst, new_target, use_tw=use_tw)
+                    if not feas_target:
+                        continue
+
+                    # Build candidate solution
+                    candidate = []
+                    for idx, route in enumerate(current_routes):
+                        if idx == source_idx:
+                            candidate.append(new_source)
+                        elif idx == target_idx:
+                            candidate.append(new_target)
+                        else:
+                            candidate.append(route[:])
+
+                    candidate_score = solution_score(inst, candidate)
+
+                    # Use frozenset to represent the client pair (order-independent)
+                    client_pair = frozenset([source_client, target_client])
+
+                    yield client_pair, candidate, candidate_score
+
+
 def _iter_relocate_candidates(
     inst: Instance,
     routes: List[List[int]],
@@ -830,14 +896,15 @@ def tabu_search(
     return_history: bool = False
 ):
     """
-    Solve the VRP using a simple Tabu Search.
+    Solve the VRP using Tabu Search with dual neighborhood exploration.
 
-    The method explores the inter-route relocate neighborhood deterministically:
-    at each iteration, it selects the best admissible relocate move. Recently
-    moved clients are declared tabu for a fixed number of iterations, unless
-    the move satisfies the aspiration criterion (improves the global best).
+    The method explores both inter-route relocate and exchange neighborhoods
+    deterministically at each iteration, selecting the best admissible move
+    from both neighborhoods combined. Recently moved/swapped clients are declared
+    tabu for a fixed number of iterations, unless the move satisfies the
+    aspiration criterion (improves the global best).
 
-    Optionally, a 2-opt intensification is applied after each accepted relocate.
+    Optionally, a 2-opt intensification is applied after each accepted move.
 
     Args:
         inst: Problem instance.
@@ -846,7 +913,7 @@ def tabu_search(
         tabu_tenure: Number of iterations during which a moved client stays tabu.
         max_iterations: Maximum number of tabu iterations.
         max_no_improve: Stop if the global best does not improve for this many iterations.
-        tabu_no_2opt: If True, disable intra-route 2-opt intensification after each accepted relocate.
+        tabu_no_2opt: If True, disable intra-route 2-opt intensification after each accepted move.
         return_history: If True, also return the evolution history.
 
     Returns:
@@ -863,17 +930,20 @@ def tabu_search(
 
     history = [current_score]
 
-    # Tabu memory: moved client -> iteration index until which it is tabu
-    tabu_until: Dict[int, int] = {}
+    # Tabu memory: can track either single clients (relocate) or client pairs (exchange)
+    # Key: client_id for relocate, frozenset([client_a, client_b]) for exchange
+    # Value: iteration index until which it is tabu
+    tabu_until: Dict = {}
 
     no_improve_count = 0
 
     for iteration in range(1, max_iterations + 1):
         best_candidate = None
         best_candidate_score = None
-        best_candidate_client = None
+        best_move_key = None
+        best_move_is_exchange = False
 
-        # Explore the whole relocate neighborhood deterministically
+        # Explore relocate neighborhood
         for moved_client, candidate, candidate_score in _iter_relocate_candidates(
             inst,
             current,
@@ -888,12 +958,31 @@ def tabu_search(
             if best_candidate is None or candidate_score < best_candidate_score:
                 best_candidate = candidate
                 best_candidate_score = candidate_score
-                best_candidate_client = moved_client
+                best_move_key = moved_client
+                best_move_is_exchange = False
+
+        # Explore exchange neighborhood
+        for client_pair, candidate, candidate_score in _iter_exchange_candidates(
+            inst,
+            current,
+            use_tw=use_tw
+        ):
+            is_tabu = tabu_until.get(client_pair, 0) > iteration
+            aspiration = candidate_score < best_score
+
+            if is_tabu and not aspiration:
+                continue
+
+            if best_candidate is None or candidate_score < best_candidate_score:
+                best_candidate = candidate
+                best_candidate_score = candidate_score
+                best_move_key = client_pair
+                best_move_is_exchange = True
 
         if best_candidate is None:
             break
 
-        current = [r[:] for r in best_candidate if r] # remove empty routes if any
+        current = [r[:] for r in best_candidate if r]  # remove empty routes if any
 
         if not tabu_no_2opt:
             current = [
@@ -915,8 +1004,8 @@ def tabu_search(
         history.append(current_score)
 
         # Update tabu memory
-        if best_candidate_client is not None:
-            tabu_until[best_candidate_client] = iteration + tabu_tenure
+        if best_move_key is not None:
+            tabu_until[best_move_key] = iteration + tabu_tenure
 
         if current_score < best_score:
             best = [r[:] for r in current]

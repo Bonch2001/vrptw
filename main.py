@@ -764,36 +764,19 @@ def main():
 
         # For testing purposes:
         # sa
-        # param_grid = {
-        #     "seed": [1, 2],
-        #     "generator": ["random"],
-        #     "instance": ["data/data111.vrp", "data/data112.vrp", "data/data201.vrp", "data/data202.vrp"],
-        #     "sa_initial_temp": [350, 400, 450, 500, 600],
-        #     "sa_cooling_rate": [0.985, 0.99, 0.995],
-        #     "sa_iterations_per_temp": [500, 600, 700, 800, 900, 1000],
-        #     "sa_p_relocate": [0.3, 0.5],
-        #     "sa_p_exchange": [0.1, 0.2, 0.3],
-        # }
-
-        # param_grid.update({
-        #     "seed": [1, 2, 3],
-        #     "instance": ["data/data111.vrp", "data/data112.vrp"],
-        #     "generator": ["random", "greedy"],
-        # })
-
         param_grid = {
-            "seed": [2],
-            "instance": ["data/data101.vrp", "data/data111.vrp"],
-            "generator": ["random"],
-            "sa_initial_temp": [400],
-            "sa_min_temp": [0.01],
-            "sa_cooling_rate": [0.99],
-            "sa_iterations_per_temp": [500],
-            "sa_p_relocate": [0.4],
-            "sa_p_exchange": [0.3], 
+            "seed": [1],
+            "instance": ["data/data1201.vrp", "data/data1202.vrp"],
+            "generator": ["greedy"],
+            "sa_initial_temp": [150, 200, 250, 300, 350, 400],  # Lower = tighter control
+            "sa_cooling_rate": [0.98, 0.985],  # Slow cooling for long runs
+            "sa_iterations_per_temp": [1500, 2000, 3000],  # Deep exploration per temp
+            "sa_p_relocate": [0.7, 0.8],  # Heavy relocations (main move type)
+            "sa_p_exchange": [0.1, 0.2],  # Light exchange
+            "sa_min_temp": [0.001],  # Very low minimum (run long)
         }
 
-        # # tabu
+        # tabu
         # param_grid = {
         #     "seed": [1, 2, 3],
         #     "tabu_tenure": [20, 30, 40, 50],
@@ -809,8 +792,6 @@ def main():
 
         logger.info("Parallel grid search requested.")
         logger.info(f"Method: {args.method}")
-        logger.info(f"Generator: {args.generator}")
-        logger.info(f"Instance: {args.instance}")
         logger.info(f"Total parameter combinations: {total_combinations}")
         logger.info(f"Max workers: {args.max_workers}")
 

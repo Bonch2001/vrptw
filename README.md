@@ -133,6 +133,12 @@ python main.py --method sa --parallel-grid-search \
   --sweep-seeds 1 2
 ```
 
+Run a parallel grid search across multiple hardcoded parameters (in param_grid in `main.py`):
+
+```bash
+python main.py --method sa --parallel-grid-search
+```
+
 ## Notes
 
 - `milp` mode currently only supports capacity-only CVRP and cannot be used with `--no-time-windows`

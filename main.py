@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """
 Main entry point for the VRP solver.
-
-Usage examples:
-    python main.py --instance data/data101.vrp --seed 42 --fill-ratio 0.65
-    python main.py --instance data/data101.vrp --generator random --plot
-    python main.py --instance data/data101.vrp --sweep-fill-ratios 0.5 0.6 0.7 0.8 0.9
 """
 
 import argparse
-from ast import arg
 import sys
 from itertools import product
 from pathlib import Path
@@ -687,12 +681,27 @@ def main():
         help="Relative MIP gap for the MILP solver (default: 0.0)"
     )
 
+    parser.add_argument(
+        "--sweep-milp-max-vehicles",
+        nargs="+",
+        type=int,
+        default=None,
+        help="List of MILP max vehicle bounds to sweep over"
+    )
+    parser.add_argument(
+        "--sweep-milp-time-limits",
+        nargs="+",
+        type=float,
+        default=None,
+        help="List of MILP time limits to sweep over"
+    )
+
     args = parser.parse_args()
 
-    # Parallel grid search for Simulated Annealing and Tabu Search
+    # Parallel grid search for Simulated Annealing Tabu Search and MILP
     if args.parallel_grid_search:
-        if args.method not in ["sa", "tabu"]:
-            logger.error("--parallel-grid-search is currently configured for --method sa and tabu only.")
+        if args.method not in ["sa", "tabu", "milp"]:
+            logger.error("--parallel-grid-search supports sa, tabu, and milp only.")
             return
 
         # Build the parameter grid from CLI sweep arguments.
@@ -761,28 +770,54 @@ def main():
                     else [args.tabu_no_2opt]
                 )
             })
+        elif args.method == "milp":
+            param_grid.update({
+                "milp_max_vehicles": (
+                    args.sweep_milp_max_vehicles 
+                    if getattr(args, "sweep_milp_max_vehicles", None)
+                    else [args.milp_max_vehicles]
+                ),
+                "milp_time_limit": (
+                    args.sweep_milp_time_limits
+                    if getattr(args, "sweep_milp_time_limits", None)
+                    else [args.milp_time_limit]
+                ),
+            })
 
         # For testing purposes:
+
         # sa
-        param_grid = {
-            "seed": [1],
-            "instance": ["data/data1201.vrp", "data/data1202.vrp"],
-            "generator": ["greedy"],
-            "sa_initial_temp": [150, 200, 250, 300, 350, 400],  # Lower = tighter control
-            "sa_cooling_rate": [0.98, 0.985],  # Slow cooling for long runs
-            "sa_iterations_per_temp": [1500, 2000, 3000],  # Deep exploration per temp
-            "sa_p_relocate": [0.7, 0.8],  # Heavy relocations (main move type)
-            "sa_p_exchange": [0.1, 0.2],  # Light exchange
-            "sa_min_temp": [0.001],  # Very low minimum (run long)
-        }
+        # param_grid = {
+        #     "seed": [1, 2],
+        #     "instance": ["data/data101.vrp"],
+        #     "generator": ["random"],
+        #     "sa_initial_temp": [300, 400],
+        #     "sa_cooling_rate": [0.98],
+        #     "sa_iterations_per_temp": [500, 1000],
+        #     "sa_p_relocate": [0.7],
+        #     "sa_p_exchange": [0.2],
+        #     "sa_min_temp": [0.01]
+        # }
 
         # tabu
         # param_grid = {
-        #     "seed": [1, 2, 3],
-        #     "tabu_tenure": [20, 30, 40, 50],
-        #     "tabu_max_iterations": [500, 600, 700, 800, 900, 1000],
-        #     "tabu_max_no_improve": [100, 150, 200, 250, 300],
-        #     "tabu_no_2opt": [True, False],
+        #     "seed": [1, 2],
+        #     "instance": ["data/data101.vrp"],
+        #     "generator": ["random"],
+        #     "tabu_tenure": [30, 40, 50],
+        #     "tabu_max_iterations": [500, 1000],
+        #     "tabu_max_no_improve": [100, 200, 300],
+        #     "tabu_no_2opt": [True, False]
+        # }
+
+        # milp
+        # param_grid = {
+        #     "seed": [1, 2],
+        #     "instance": ["data/data101.vrp"],
+        #     "generator": ["random"],
+        #     "milp_max_vehicles": [5, 10],
+        #     "milp_time_limit": [30, 60],
+        #     "milp_mip_gap": [0.0, 0.01]
         # }
 
         # Count combinations

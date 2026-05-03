@@ -1,0 +1,30 @@
+{
+  "instance_name": "data1202.vrp",
+  "method": "sa",
+  "generator": "random",
+  "use_time_windows": true,
+  "params": {
+    "fill_ratio": 0.75,
+    "seed": 1,
+    "sa_initial_temp": 250,
+    "sa_cooling_rate": 0.99,
+    "sa_min_temp": 0.001,
+    "sa_iterations_per_temp": 2000,
+    "sa_p_relocate": 0.7,
+    "sa_p_exchange": 0.1,
+    "tabu_tenure": 10,
+    "tabu_max_iterations": 200,
+    "tabu_max_no_improve": 50,
+    "tabu_no_2opt": false
+  },
+  "initial_routes": 34,
+  "initial_distance": 5400.139156373258,
+  "final_routes": 4,
+  "final_distance": 1175.9926759385392,
+  "delta_routes": 30,
+  "delta_distance": 4224.146480434719,
+  "distance_improvement_pct": 78.222919041806,
+  "runtime_seconds": 372.5010975999976,
+  "history_length": 465983,
+  "counters": {}
+}

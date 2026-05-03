@@ -210,7 +210,7 @@ def _solve_fixed_k_cvrp(
 
 def solve_cvrp_milp(
     inst: Instance,
-    max_vehicles: Optional[int] = None,
+    max_vehicles: Optional[int] = 20,
     time_limit: Optional[float] = 60.0,
     mip_gap: float = 0.0,
     return_history: bool = False
